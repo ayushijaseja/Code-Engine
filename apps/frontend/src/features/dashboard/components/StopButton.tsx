@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button';
 import { Square, Loader2, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { StopPhase } from '../hooks/useStopWorkspace';
+import { useEffect } from 'react';
 
 interface StopButtonProps {
   phase: StopPhase;
@@ -10,50 +11,57 @@ interface StopButtonProps {
 
 export const StopButton = ({ phase, onStop }: StopButtonProps) => {
   const isIdle = phase === 'idle';
-  const isStopping = phase === 'stopping';
+  const isStopping = phase === 'stopping' || phase === 'stopped';
   const isError = phase === 'error';
 
+  console.log(phase);
+
+  useEffect(()=>{
+    console.log(phase);
+  },[phase]);
+
   return (
-    <div className="w-full space-y-4">
+    <div className="w-full space-y-3 mt-auto">
       <Button
         onClick={onStop}
         disabled={!isIdle}
         className={cn(
-          "w-full h-16 text-lg font-bold rounded-2xl transition-all duration-300 shadow-lg",
-          isIdle && "bg-red-900 hover:bg-red-800 text-white shadow-red-500/20",
-          isStopping && "bg-neutral-800 text-neutral-400 cursor-not-allowed",
-          isError && "bg-red-500/20 text-red-400 border border-red-500/50"
+          "w-full h-12 text-sm font-bold rounded-2xl transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-orange-900 focus:ring-offset-2 focus:ring-offset-neutral-900",
+          isIdle && "bg-orange-950/20 text-orange-500 border border-orange-900/30 hover:bg-orange-950/40 hover:border-orange-800/50 hover:text-orange-400",
+          isStopping && "bg-neutral-900/50 text-neutral-600 border border-neutral-800 cursor-not-allowed shadow-none",
+          isError && "bg-red-950/60 text-red-400 border border-red-900/80"
         )}
       >
-        <div className="flex items-center gap-3">
+        <div className="flex items-center justify-center gap-2.5">
           {isIdle && (
             <>
-              <Square className="w-6 h-6" />
-              <span>Stop Workspace</span>
+              <Square className="w-4 h-4 fill-current" />
+              <span>Execute Hibernation</span>
             </>
           )}
 
           {isStopping && (
             <>
-              <Loader2 className="w-6 h-6 animate-spin" />
-              <span>Releasing Resources...</span>
+              <Loader2 className="w-4 h-4 animate-spin text-orange-400" />
+              <span>Terminating Pods...</span>
             </>
           )}
 
           {isError && (
             <>
-              <AlertCircle className="w-6 h-6" />
-              <span>Stop Failed</span>
+              <AlertCircle className="w-4 h-4" />
+              <span>Graceful Stop Failed</span>
             </>
           )}
         </div>
       </Button>
 
-      <p className="text-center text-xs font-medium text-neutral-500">
-        {isIdle && "This will stop compute resources but preserve your storage."}
-        {isStopping && "Shutting down pods and freeing cluster resources..."}
-        {isError && "Something went wrong. Check logs or retry."}
-      </p>
+      <div className="h-4 flex items-center justify-center">
+        <p className="text-center text-xs text-neutral-500 font-medium">
+          {isStopping && "Draining connections and releasing compute..."}
+          {isError && "Forced termination may be required"}
+        </p>
+      </div>
     </div>
   );
 };

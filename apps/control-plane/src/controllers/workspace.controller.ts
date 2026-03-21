@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { K8sService } from '../services/k8s.service';
+import { WorkspaceService } from '../services/workspace.service';
 
 export const stopWorkspace = async (req: Request, res: Response) => {
   try {
@@ -11,7 +11,7 @@ export const stopWorkspace = async (req: Request, res: Response) => {
 
     console.log(`[Control Plane] Stopping workspace for user: ${userId}`);
 
-    await K8sService.stopWorkspace(userId);
+    await WorkspaceService.stopWorkspace(userId);
 
     return res.status(200).json({
       success: true,
@@ -33,7 +33,7 @@ export const launchWorkspace = async (req: Request, res: Response): Promise<void
         
         console.log(`[User: ${userId}] requested to launch/resume workspace`);
 
-        const k8sDetails = await K8sService.createWorkspace(userId);
+        const k8sDetails = await WorkspaceService.createWorkspace(userId);
 
         res.status(200).json({
             message: "Workspace ready",

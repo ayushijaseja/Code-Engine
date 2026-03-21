@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import { eq } from 'drizzle-orm';
 import { db } from '../db';
 import { users } from '../db/schema';
-import { K8sService } from '../services/k8s.service';
+import { WorkspaceService } from '../services/workspace.service';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-code-engine-key';
 
@@ -67,7 +67,7 @@ export const deleteAccount = async (req: Request, res: Response): Promise<void> 
   try {
     const userId = req.user!.id;
 
-    await K8sService.deleteWorkspace(userId);
+    await WorkspaceService.deleteWorkspace(userId);
 
     await db.delete(users).where(eq(users.id, userId));
 
