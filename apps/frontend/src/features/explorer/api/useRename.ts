@@ -1,11 +1,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useWorkspaceStore } from "@/store/workspaceStore";
 
-const WORKSPACE_AGENT_URL = import.meta.env.VITE_WORKSPACE_AGENT_URL;
-
-async function renameNode({ oldPath, newPath }: { oldPath: string, newPath: string }) {
-    const response = await fetch(`${WORKSPACE_AGENT_URL}/fs/rename`, {
+async function renameNode({ oldPath, newPath, apiUrl }: { oldPath: string, newPath: string, apiUrl: string }) {
+    const response = await fetch(`${apiUrl}/api/fs/rename`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+            'Content-Type': 'application/json' 
+        },
         body: JSON.stringify({ oldPath, newPath }),
     });
 
@@ -15,11 +16,20 @@ async function renameNode({ oldPath, newPath }: { oldPath: string, newPath: stri
 
 export function useRenameNode() {
     const queryClient = useQueryClient();
+    
+    const apiUrl = useWorkspaceStore((state) => state.apiUrl);
 
     return useMutation({
-        mutationFn: renameNode,
+        mutationFn: (variables: { oldPath: string, newPath: string }) => {
+            if (!apiUrl) throw new Error("API URL is not initialized");
+            return renameNode({ ...variables, apiUrl });
+        },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['fs', 'tree'] });
+            if (apiUrl) {
+                queryClient.invalidateQueries({ 
+                    queryKey: ['fs', 'tree', apiUrl] 
+                });
+            }
         },
     });
 }

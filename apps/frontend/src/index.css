@@ -127,3 +127,15 @@
     @apply font-sans;
     }
 }
+
+.xterm .xterm-viewport {
+  /* Firefox */
+  scrollbar-width: none !important;
+  /* IE and Edge */
+  -ms-overflow-style: none !important;
+}
+
+.xterm .xterm-viewport::-webkit-scrollbar {
+  /* Chrome, Safari, and Opera */
+  display: none !important;
+}

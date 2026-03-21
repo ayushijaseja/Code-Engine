@@ -1,14 +1,13 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useWorkspaceStore } from "@/store/workspaceStore";
 
 interface CreatePayload {
     path: string;
     type: 'file' | 'directory';
 }
 
-const WORKSPACE_AGENT_URL = import.meta.env.VITE_WORKSPACE_AGENT_URL;
-
-async function createNode(payload: CreatePayload) {
-    const response = await fetch(`${WORKSPACE_AGENT_URL}/fs/create`, {
+async function createNode(payload: CreatePayload, apiUrl: string) {
+    const response = await fetch(`${apiUrl}/api/fs/create`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -25,11 +24,20 @@ async function createNode(payload: CreatePayload) {
 
 export function useCreateItem() {
     const queryClient = useQueryClient();
+    
+    const apiUrl = useWorkspaceStore((state) => state.apiUrl);
 
     return useMutation({
-        mutationFn: createNode,
+        mutationFn: (payload: CreatePayload) => {
+            if (!apiUrl) throw new Error("API URL is not initialized");
+            return createNode(payload, apiUrl);
+        },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['fs', 'tree'] });
+            if (apiUrl) {
+                queryClient.invalidateQueries({ 
+                    queryKey: ['fs', 'tree', apiUrl] 
+                });
+            }
         },
     });
 }

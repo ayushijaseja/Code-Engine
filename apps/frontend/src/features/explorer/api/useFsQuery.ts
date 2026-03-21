@@ -1,19 +1,24 @@
 import { useQuery } from '@tanstack/react-query';
-import type { FileNode } from "@repo/shared-types"
+import type { FileNode } from "@repo/shared-types";
+import { useWorkspaceStore } from "@/store/workspaceStore";
 
-const WORKSPACE_AGENT_URL = import.meta.env.VITE_WORKSPACE_AGENT_URL;
-
-async function getFileTree(){
-    const response = await fetch(`${WORKSPACE_AGENT_URL}/fs/tree`);
+async function getFileTree(apiUrl: string): Promise<FileNode[]> {
+    const response = await fetch(`${apiUrl}/api/fs/tree`);
     if (!response.ok) {
-    throw new Error('Network response was not ok');
+        throw new Error('Network response was not ok');
     }
     return response.json();
 }
 
 export function useFsTree() {
+  const apiUrl = useWorkspaceStore((state) => state.apiUrl);
+
   return useQuery<FileNode[]>({
-    queryKey: ['fs', 'tree'],
-    queryFn: getFileTree
+    queryKey: ['fs', 'tree', apiUrl],
+    queryFn: () => {
+        if (!apiUrl) throw new Error("API URL is not initialized");
+        return getFileTree(apiUrl);
+    },
+    enabled: !!apiUrl
   });
 }

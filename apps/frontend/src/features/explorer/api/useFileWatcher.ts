@@ -1,14 +1,16 @@
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-
-const WORKSPACE_AGENT_URL = import.meta.env.VITE_WORKSPACE_AGENT_URL;
+import { useWorkspaceStore } from "@/store/workspaceStore";
 
 export function useFileWatcher() {
   const queryClient = useQueryClient();
+  
+  const apiUrl = useWorkspaceStore((state) => state.apiUrl);
 
   useEffect(() => {
-    const eventSourceUrl = `${WORKSPACE_AGENT_URL}/fs/stream`;
-      
+    if (!apiUrl) return;
+
+    const eventSourceUrl = `${apiUrl}/api/fs/stream`;
     const eventSource = new EventSource(eventSourceUrl);
 
     eventSource.onmessage = (event) => {
@@ -16,9 +18,9 @@ export function useFileWatcher() {
         const data = JSON.parse(event.data);
         
         if (['add', 'unlink', 'addDir', 'unlinkDir'].includes(data.action)) {
-          console.log(`File tree changed (${data.action} at ${data.path}), invalidating cache...`);
+          console.log(`File tree changed (${data.action} at ${data.path}) for ${apiUrl}`);
           
-          queryClient.invalidateQueries({ queryKey: ['fs', 'tree'] });
+          queryClient.invalidateQueries({ queryKey: ['fs', 'tree', apiUrl] });
         }
       } catch (err) {
         console.error('Failed to parse SSE message:', err);
@@ -26,11 +28,12 @@ export function useFileWatcher() {
     };
 
     eventSource.onerror = (error) => {
-      console.error('SSE Connection lost. Browser will auto-reconnect...', error);
+      console.error('SSE Connection lost to', apiUrl, error);
     };
 
     return () => {
+      console.log('Closing SSE connection to', apiUrl);
       eventSource.close();
     };
-  }, [queryClient]);
+  }, [queryClient, apiUrl]); 
 }

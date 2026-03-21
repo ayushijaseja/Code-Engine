@@ -7,7 +7,7 @@ export function EditorTabs() {
   if (openFiles.length === 0) return null;
 
   return (
-    <div className="flex bg-background border-b overflow-x-auto hide-scrollbar">
+    <div className="flex bg-background border-b hide-scrollbar">
       {openFiles.map((filePath) => {
         const fileName = filePath.split('/').pop() || filePath;
         const isActive = activeFile === filePath;

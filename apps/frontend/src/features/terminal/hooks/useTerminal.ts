@@ -2,12 +2,14 @@ import { useEffect, useRef } from 'react';
 import { Terminal } from 'xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import 'xterm/css/xterm.css';
+import { useWorkspaceStore } from "@/store/workspaceStore";
 
 export function useTerminal(terminalRef: React.RefObject<HTMLDivElement | null>) {
   const isInitialized = useRef(false);
+  const wsUrl = useWorkspaceStore((state) => state.wsUrl);
 
   useEffect(() => {
-    if (isInitialized.current || !terminalRef.current) return;
+    if (isInitialized.current || !terminalRef.current || !wsUrl) return;
     isInitialized.current = true;
 
     const term = new Terminal({
@@ -22,8 +24,7 @@ export function useTerminal(terminalRef: React.RefObject<HTMLDivElement | null>)
     term.open(terminalRef.current);
     fitAddon.fit();
 
-    const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:8081';
-    const socket = new WebSocket(wsUrl);
+    const socket = new WebSocket(`${wsUrl}/terminal`);
 
     socket.onopen = () => {
       term.write('\r\n\x1b[32m*** Connected to Ubuntu Workspace ***\x1b[0m\r\n');
@@ -68,7 +69,5 @@ export function useTerminal(terminalRef: React.RefObject<HTMLDivElement | null>)
       term.dispose();
       isInitialized.current = false;
     };
-
-    
-  }, [terminalRef]); 
+  }, [terminalRef, wsUrl]); 
 }

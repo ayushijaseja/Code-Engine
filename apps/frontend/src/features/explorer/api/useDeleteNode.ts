@@ -1,9 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useWorkspaceStore } from "@/store/workspaceStore";
 
-const WORKSPACE_AGENT_URL = import.meta.env.VITE_WORKSPACE_AGENT_URL;
-
-async function deleteNode(path: string) {
-    const response = await fetch(`${WORKSPACE_AGENT_URL}/fs/delete?path=${encodeURIComponent(path)}`, {
+async function deleteNode(path: string, apiUrl: string) {
+    const response = await fetch(`${apiUrl}/api/fs/delete?path=${encodeURIComponent(path)}`, {
         method: 'DELETE',
     });
 
@@ -16,11 +15,20 @@ async function deleteNode(path: string) {
 
 export function useDeleteNode() {
     const queryClient = useQueryClient();
+    
+    const apiUrl = useWorkspaceStore((state) => state.apiUrl);
 
     return useMutation({
-        mutationFn: deleteNode,
+        mutationFn: (path: string) => {
+            if (!apiUrl) throw new Error("API URL is not initialized");
+            return deleteNode(path, apiUrl);
+        },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['fs', 'tree'] });
+            if (apiUrl) {
+                queryClient.invalidateQueries({ 
+                    queryKey: ['fs', 'tree', apiUrl] 
+                });
+            }
         },
     });
 }

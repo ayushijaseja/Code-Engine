@@ -1,35 +1,44 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-
-const WORKSPACE_AGENT_URL = import.meta.env.VITE_WORKSPACE_AGENT_URL;
+import { useWorkspaceStore } from "@/store/workspaceStore";
 
 interface SavePayload {
   path: string;
   content: string;
 }
 
-async function saveFile({path, content} : SavePayload){
-      const response = await fetch(`${WORKSPACE_AGENT_URL}/fs/write`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ path, content }),
-      });
+async function saveFile({ path, content }: SavePayload, apiUrl: string) {
+  const response = await fetch(`${apiUrl}/api/fs/write`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ path, content }),
+  });
 
-      if (!response.ok) {
-        throw new Error('Failed to save file');
-      }
+  if (!response.ok) {
+    throw new Error('Failed to save file');
+  }
 
-      return response.json();
-    }
+  return response.json();
+}
 
 export function useSaveFile() {
   const queryClient = useQueryClient();
+  
+  const apiUrl = useWorkspaceStore((state) => state.apiUrl);
 
   return useMutation({
-    mutationFn: saveFile ,
+    mutationFn: (payload: SavePayload) => {
+      if (!apiUrl) throw new Error("API URL is not initialized");
+      return saveFile(payload, apiUrl);
+    },
     onSuccess: (_, variables) => {
-      queryClient.setQueryData(['fs', 'file', variables.path], variables.content);
+      if (apiUrl) {
+        queryClient.setQueryData(
+            ['fs', 'file', variables.path, apiUrl], 
+            variables.content
+        );
+      }
     },
   });
 }
