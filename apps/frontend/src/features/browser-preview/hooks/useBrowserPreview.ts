@@ -2,12 +2,14 @@ import { useState, useCallback } from 'react';
 import { useWorkspaceStore } from "@/store/workspaceStore";
 
 export const useBrowserPreview = (initialPort = 3000) => {
-  const [activePort, setActivePort] = useState(initialPort);
-  const [portInput, setPortInput] = useState(initialPort.toString());
+  const [activeRoute, setActiveRoute] = useState(`${initialPort}/`);
+  const [routeInput, setRouteInput] = useState(`${initialPort}/`);
   const [refreshKey, setRefreshKey] = useState(0);
   
   const apiUrl = useWorkspaceStore((state) => state.apiUrl);
-  const previewUrl = `${apiUrl}/proxy/${activePort}/`;
+  
+  const cleanRoute = activeRoute.startsWith('/') ? activeRoute.slice(1) : activeRoute;
+  const previewUrl = `${apiUrl}/proxy/${cleanRoute}`;
 
   const handleRefresh = useCallback(() => {
     setRefreshKey((prev) => prev + 1);
@@ -17,32 +19,45 @@ export const useBrowserPreview = (initialPort = 3000) => {
     window.open(previewUrl, '_blank');
   }, [previewUrl]);
 
-  const commitPortChange = useCallback(() => {
-    const parsed = parseInt(portInput, 10);
-    if (!isNaN(parsed) && parsed > 0 && parsed <= 65535) {
-      setActivePort(parsed);
-      setRefreshKey((prev) => prev + 1); 
-    } else {
-      setPortInput(activePort.toString());
+  const commitRouteChange = useCallback(() => {
+    const match = routeInput.match(/^(\d+)(.*)/);
+    
+    if (match) {
+      const parsedPort = parseInt(match[1], 10);
+      let path = match[2] || '/';
+      
+      if (path && !path.startsWith('/')) {
+        path = `/${path}`;
+      }
+
+      if (parsedPort > 0 && parsedPort <= 65535) {
+        const newRoute = `${parsedPort}${path}`;
+        setActiveRoute(newRoute);
+        setRouteInput(newRoute);
+        setRefreshKey((prev) => prev + 1); 
+        return;
+      }
     }
-  }, [portInput, activePort]);
+    
+    setRouteInput(activeRoute);
+  }, [routeInput, activeRoute]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      commitPortChange();
+      commitRouteChange();
     }
-  }, [commitPortChange]);
+  }, [commitRouteChange]);
 
   return {
     apiUrl,
     previewUrl,
-    activePort,
-    portInput,
+    activeRoute,
+    routeInput,
     refreshKey,
-    setPortInput,
+    setRouteInput,
     handleRefresh,
     handleOpenExternal,
-    commitPortChange,
+    commitRouteChange,
     handleKeyDown,
   };
 };

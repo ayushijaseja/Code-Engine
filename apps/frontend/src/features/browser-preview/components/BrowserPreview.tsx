@@ -6,13 +6,13 @@ export const BrowserPreview = () => {
   const {
     apiUrl,
     previewUrl,
-    activePort,
-    portInput,
+    activeRoute,
+    routeInput,
     refreshKey,
-    setPortInput,
+    setRouteInput,
     handleRefresh,
     handleOpenExternal,
-    commitPortChange,
+    commitRouteChange,
     handleKeyDown,
   } = useBrowserPreview();
 
@@ -20,10 +20,10 @@ export const BrowserPreview = () => {
     <div className="flex flex-col h-full bg-white border-l border-neutral-800">
       <PreviewToolbar
         apiUrl={apiUrl!}
-        portInput={portInput}
-        activePort={activePort}
-        onPortInputChange={setPortInput}
-        onPortCommit={commitPortChange}
+        routeInput={routeInput}
+        activeRoute={activeRoute}
+        onRouteInputChange={setRouteInput}
+        onRouteCommit={commitRouteChange}
         onKeyDown={handleKeyDown}
         onRefresh={handleRefresh}
         onOpenExternal={handleOpenExternal}
