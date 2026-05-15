@@ -1,0 +1,10 @@
+node_modules
+apps/*/node_modules
+packages/*/node_modules
+dist
+apps/*/dist
+.turbo
+npm-debug.log
+yarn-error.log
+.git
+.env

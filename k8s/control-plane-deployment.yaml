@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: control-plane
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: control-plane
+  template:
+    metadata:
+      labels:
+        app: control-plane
+    spec:
+      containers:
+      - name: control-plane
+        image: code-engine-control-plane
+        imagePullPolicy: Never
+        ports:
+        - containerPort: 3000
+        env: # <--- Add the env section here
+        - name: DB_HOST
+          value: "auth-db-service"
+        - name: DB_PORT
+          value: "5432"
+        - name: DB_USER
+          value: "postgres"
+        - name: DB_PASSWORD
+          value: "yourpassword"
+        - name: DB_NAME
+          value: "postgres"

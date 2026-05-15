@@ -7,7 +7,7 @@ const app = express();
 
 app.use(cors());
 
-app.use('/proxy/:port/*', dynamicProxyHandler);
+app.use('/proxy/:port{/*splat}', dynamicProxyHandler);
 
 app.use(express.json());
 
